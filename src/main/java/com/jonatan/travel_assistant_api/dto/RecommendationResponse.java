@@ -1,5 +1,7 @@
 package com.jonatan.travel_assistant_api.dto;
 
-public class RecommendationResponse {
+import java.util.List;
+
+public record RecommendationResponse (String city, WeatherDto weather, String recommendedCategory, List<ActivityDto> activities) {
     
 }
