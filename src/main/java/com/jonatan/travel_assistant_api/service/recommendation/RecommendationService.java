@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.jonatan.travel_assistant_api.dto.ActivityDto;
 import com.jonatan.travel_assistant_api.dto.RecommendationResponse;
 import com.jonatan.travel_assistant_api.dto.WeatherDto;
+import com.jonatan.travel_assistant_api.service.external.ActivityService;
 import com.jonatan.travel_assistant_api.service.external.WeatherService;
 
 import lombok.RequiredArgsConstructor;
@@ -16,16 +17,15 @@ import lombok.RequiredArgsConstructor;
 public class RecommendationService {
 
     private final WeatherService weatherService;
+    private final ActivityService activityService;
 
     public RecommendationResponse getRecommendations(String city) {
         WeatherDto weather = weatherService.getWeather(city);
 
         String recommendedCategory = weather.category();
-        List<ActivityDto> activities = List.of(
-            new ActivityDto("Kungsparken", "park", "Malmö"),
-            new ActivityDto("Ribersborg", "beach", "Malmö")
 
-    );
+        List<ActivityDto> activities = activityService.getActivities(city, recommendedCategory);
+    
 
         return new RecommendationResponse(city, weather, recommendedCategory, activities);
     }

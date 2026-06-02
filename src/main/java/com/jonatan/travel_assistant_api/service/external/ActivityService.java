@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.jonatan.travel_assistant_api.dto.ActivityDto;
 import com.jonatan.travel_assistant_api.dto.GeoapifyResponse;
@@ -32,20 +31,20 @@ public class ActivityService {
         
 
         // bygger URL:en med hjälp av UriComponentsBuilder för att göra det mer läsbart och hantera query-parametrar på ett snyggt sätt
-        String url = UriComponentsBuilder.fromPath(baseUrl + "/places")
-            .queryParam("categories", geoapifyCategory)
-            .queryParam("filter", "place:city:" + city)
-            .queryParam("limit", 5)
-            .queryParam("apiKey", apiKey)
-            .build()
-            .toUriString();
-        
-        // gör API-anropet och mappar svaret till GeoapifyResponse-klassen    
+        String url = baseUrl +
+                "/places?categories=" + geoapifyCategory +
+                "&filter=circle:13.0038,55.6050,5000" +
+                "&bias=proximity:13.0038,55.6050" +
+                "&limit=5" +
+                "&apiKey=" + apiKey;
+
+        System.out.println(url);
+
         GeoapifyResponse response = webClient.get()
-            .uri(url)
-            .retrieve()
-            .bodyToMono(GeoapifyResponse.class)
-            .block();
+                .uri(url)
+                .retrieve()
+                .bodyToMono(GeoapifyResponse.class)
+                .block();
         
         // om svaret är null eller inte innehåller några features, returnera en fallback-lista med aktiviteter
         if (response == null || response.features() == null || response.features().isEmpty()) {
@@ -56,7 +55,7 @@ public class ActivityService {
         return response.features()
             .stream()
             .map(feature -> new ActivityDto(
-                feature.properties().name() !=null ? feature.properties().name() : "Unknown place",
+                feature.properties().name() !=null ? feature.properties().name() : feature.properties().formatted(), // använder formatted som namn om name är null
                 geoapifyCategory,
                 feature.properties().formatted() // använder formatted som platsbeskrivning
             ))
