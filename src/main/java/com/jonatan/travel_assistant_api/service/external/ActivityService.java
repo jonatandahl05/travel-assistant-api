@@ -40,6 +40,8 @@ public class ActivityService {
 
         System.out.println(url);
 
+        try {
+
         GeoapifyResponse response = webClient.get()
                 .uri(url)
                 .retrieve()
@@ -52,14 +54,26 @@ public class ActivityService {
     
         }
 
-        return response.features()
+        List<ActivityDto> activities = response.features()
             .stream()
             .map(feature -> new ActivityDto(
-                feature.properties().name() !=null ? feature.properties().name() : feature.properties().formatted(), // använder formatted som namn om name är null
+                feature.properties().name() != null ? feature.properties().name() : feature.properties().formatted(), // använder formatted som namn om name är null
                 geoapifyCategory,
                 feature.properties().formatted() // använder formatted som platsbeskrivning
             ))
             .toList();
+
+        if (activities.isEmpty()) {
+            return getFallbackActivities(weatherCategory);
+        }
+
+        return activities;
+
+        } catch (Exception e) {
+            // Logga felet och returnera fallback-aktiviteter
+            System.err.println("Error fetching activities from Geoapify: " + e.getMessage());
+            return getFallbackActivities(weatherCategory);
+        }
         
     }
 
@@ -67,10 +81,10 @@ public class ActivityService {
         return switch (weatherCategory) {
             case "Outdoor" -> "leisure.park";
             case "Indoor" -> "entertainment.museum";
-            default -> "tourism.sights";
+            default -> "tourism.attraction";
         };
     }
-
+    // Om API-anropet misslyckas eller inte returnerar några aktiviteter, returnera en fördefinierad lista med aktiviteter baserat på väderkategorin
     private List<ActivityDto> getFallbackActivities(String weatherCategory) {
         return List.of(
             new ActivityDto("Malmö Museum", weatherCategory, "Malmö"),
