@@ -19,13 +19,15 @@ public class RecommendationService {
 
     public RecommendationResponse getRecommendations(String city) {
         WeatherDto weather = weatherService.getWeather(city);
+
+        String recommendedCategory = weather.category();
         List<ActivityDto> activities = List.of(
             new ActivityDto("Kungsparken", "park", "Malmö"),
             new ActivityDto("Ribersborg", "beach", "Malmö")
 
     );
 
-        return new RecommendationResponse(city, weather, weather.category(), activities);
+        return new RecommendationResponse(city, weather, recommendedCategory, activities);
     }
     
 }
