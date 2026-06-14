@@ -85,6 +85,21 @@ Bearer Authentication demonstreras genom ett anrop till httpbin där en Bearer T
 Authorization: Bearer demo-token
 ```
 
+## 🛡️ Fallback-hantering
+
+Om WeatherAPI inte svarar eller returnerar ett fel används en fallback-lösning så att applikationen fortfarande kan ge rekommendationer.
+
+Exempel på fallback-svar:
+
+```json
+{
+  "condition": "Sunny",
+  "category": "Outdoor"
+}
+```
+
+På så sätt fortsätter applikationen fungera även om den externa vädertjänsten är nere.
+
 ## ▶️ Starta projektet
 
 ```bash
