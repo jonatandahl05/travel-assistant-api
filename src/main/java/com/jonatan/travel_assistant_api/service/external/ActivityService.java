@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.jonatan.travel_assistant_api.dto.ActivityDto;
+import com.jonatan.travel_assistant_api.dto.CoordinatesDto;
+import com.jonatan.travel_assistant_api.dto.GeoapifyGeocodeResponse;
 import com.jonatan.travel_assistant_api.dto.GeoapifyResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -28,15 +30,17 @@ public class ActivityService {
     // mappar väderkategorier till Geoapify-kategorier
     public List<ActivityDto> getActivities(String city, String weatherCategory) {
         String geoapifyCategory = mapWeatherToGeoapifyCategory(weatherCategory);
+
+        CoordinatesDto coordinates = getCoordinates(city);
         
 
         // bygger URL:en med hjälp av UriComponentsBuilder för att göra det mer läsbart och hantera query-parametrar på ett snyggt sätt
         String url = baseUrl +
-                "/places?categories=" + geoapifyCategory +
-                "&filter=circle:13.0038,55.6050,5000" +
-                "&bias=proximity:13.0038,55.6050" +
-                "&limit=5" +
-                "&apiKey=" + apiKey;
+              "/places?categories=" + geoapifyCategory +
+              "&filter=circle:" + coordinates.lon() + "," + coordinates.lat() + ",5000" +
+              "&bias=proximity:" + coordinates.lon() + "," + coordinates.lat() +
+              "&limit=5" +
+              "&apiKey=" + apiKey;
 
         System.out.println(url);
 
@@ -84,6 +88,35 @@ public class ActivityService {
             default -> "tourism.attraction";
         };
     }
+
+  private CoordinatesDto getCoordinates(String city) {
+    try {
+        String url = "https://api.geoapify.com/v1/geocode/search" +
+                "?text=" + city +
+                "&limit=1" +
+                "&apiKey=" + apiKey;
+
+        GeoapifyGeocodeResponse response = webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(GeoapifyGeocodeResponse.class)
+                .block();
+
+        if (response == null || response.features() == null || response.features().isEmpty()) {
+            return new CoordinatesDto(13.0038, 55.6050);
+        }
+
+        GeoapifyGeocodeResponse.Properties properties =
+                response.features().get(0).properties();
+
+        return new CoordinatesDto(properties.lon(), properties.lat());
+
+    } catch (Exception e) {
+        System.err.println("Error fetching coordinates from Geoapify: " + e.getMessage());
+        return new CoordinatesDto(13.0038, 55.6050);
+    }
+}
+
     // Om API-anropet misslyckas eller inte returnerar några aktiviteter, returnera en fördefinierad lista med aktiviteter baserat på väderkategorin
     private List<ActivityDto> getFallbackActivities(String weatherCategory) {
         return List.of(

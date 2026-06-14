@@ -24,9 +24,7 @@ public class WeatherService {
     
 
     public WeatherDto getWeather(String city) {
-
         try {
-
             WeatherApiResponse response = webClient.get()
                     .uri(baseUrl + "/current.json?key=" + apiKey + "&q=" + city)
                     .retrieve()
