@@ -21,16 +21,29 @@ public class WeatherService {
     @Value("${weather.api.base-url}")
     private String baseUrl;
 
+    
+
     public WeatherDto getWeather(String city) {
-        WeatherApiResponse response = webClient.get()
-            .uri(baseUrl + "/current.json?key=" + apiKey + "&q=" + city)
-            .retrieve()
-            .bodyToMono(WeatherApiResponse.class)
-            .block();
 
-        String condition = response.current().condition().text();
+        try {
 
-        return new WeatherDto(condition, getCategory(condition));
+            WeatherApiResponse response = webClient.get()
+                    .uri(baseUrl + "/current.json?key=" + apiKey + "&q=" + city)
+                    .retrieve()
+                    .bodyToMono(WeatherApiResponse.class)
+                    .block();
+
+            String condition = response.current().condition().text();
+
+            return new WeatherDto(condition, getCategory(condition));
+
+        } catch (Exception e) {
+
+            System.err.println("Weather API failed, using fallback weather: " + e.getMessage());
+            return new WeatherDto("Sunny", "Outdoor");
+
+        }
+
     }
 
     private String getCategory(String condition) {
